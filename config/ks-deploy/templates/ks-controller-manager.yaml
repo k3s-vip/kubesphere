@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ks-controller-manager
+    tier: backend
+  name: ks-controller-manager
+  namespace: kubesphere-system
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: ks-controller-manager
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: ks-controller-manager
+        tier: backend
+    spec:
+      serviceAccount: kubesphere
+      nodeSelector:
+        operator: ""
+      tolerations:
+        - operator: Exists
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: ks-controller-manager
+          image: docker.io/kubesphere/ks-controller-manager:v4.1.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+          command:
+            - controller-manager
+            - --logtostderr=true
+            - --leader-elect=true
+            - --controllers=*
+          env:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - mountPath: /etc/kubesphere/
+              name: kubesphere-config
+            - mountPath: /tmp/k8s-webhook-server/serving-certs
+              name: webhook-secret
+      volumes:
+        - name: kubesphere-config
+          configMap:
+            name: kubesphere-config
+            defaultMode: 420
+        - name: webhook-secret
+          secret:
+            defaultMode: 420
+            secretName: ks-controller-manager-webhook-cert

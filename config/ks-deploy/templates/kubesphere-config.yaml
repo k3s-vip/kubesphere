@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubesphere-config
+  namespace: kubesphere-system
+data:
+  kubesphere.yaml: |
+    authentication:
+      authenticateRateLimiterMaxTries: 10
+      authenticateRateLimiterDuration: 10m0s
+      loginHistoryRetentionPeriod: 168h
+      multipleLogin: true
+      issuer:
+        url: "http://ks-console.kubesphere-system.svc"
+        jwtSecret: "0123456789ABCDEF0123456789abcdef"
+        maximumClockSkew: 10s
+        accessTokenMaxAge: 2h
+        accessTokenInactivityTimeout: 30m
+    s3:
+      endpoint: ""
+      region: us-east-1
+      disableSSL: true
+      forcePathStyle: true
+      accessKeyID: admin
+      secretAccessKey: admin
+      bucket: uploads
+    multicluster:
+      clusterRole: "host"
+      hostClusterName: "host"
+    terminal:
+      kubectl:
+        image: docker.io/kubesphere/kubectl:v1.27.16
+      node:
+        image:  docker.io/kubesphere/kubectl:v1.27.16
+      uploadFileLimit: 1Gi
+    helmExecutor:
+      image: docker.io/kubesphere/kubectl:v1.27.16
+      timeout: 10m
+      historyMax: 2
+      jobTTLAfterFinished: 0s
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+    extension:
+      imageRegistry: ""
+      nodeSelector:
+        operator: ""
+    experimental:
+      validationDirective: ""
+    composedApp:
+      appSelector: ""
+    kubesphere:
+      tls: false
+    auditing:
+      auditLevel: Metadata
+      enable: true
+      logOptions:
+        maxAge: 7
+        maxBackups: 10
+        maxSize: 100
+        path: /etc/audit/audit.log

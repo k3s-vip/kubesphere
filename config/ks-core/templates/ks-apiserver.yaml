@@ -5,7 +5,6 @@ metadata:
   labels:
     app: ks-apiserver
     tier: backend
-    version: {{ .Chart.AppVersion }}
   name: ks-apiserver
   namespace: kubesphere-system
 spec:
@@ -24,9 +23,6 @@ spec:
       labels:
         app: ks-apiserver
         tier: backend
-      annotations:
-        # force restart ks-apiserver after the upgrade is complete if kubesphere-config changes
-        checksum/config: {{ include (print $.Template.BasePath "/kubesphere-config.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ template "ks-core.serviceAccountName" . }}
       {{- include "apiserver.imagePullSecrets" . | nindent 6 }}
@@ -97,9 +93,6 @@ spec:
           volumeMounts:
             - mountPath: /etc/kubesphere/
               name: kubesphere-config
-            - mountPath: /etc/localtime
-              name: host-time
-              readOnly: true
           {{- if .Values.apiserver.extraVolumeMounts }}
           {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.extraVolumeMounts "context" $) | nindent 12 }}
           {{- end }}
@@ -120,10 +113,6 @@ spec:
             defaultMode: 420
             name: kubesphere-config
           name: kubesphere-config
-        - hostPath:
-            path: /etc/localtime
-            type: ""
-          name: host-time
         {{- if .Values.apiserver.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.extraVolumes "context" $) | nindent 8 }}
         {{- end }}

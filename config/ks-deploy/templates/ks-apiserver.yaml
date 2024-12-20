@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ks-apiserver
+    tier: backend
+  name: ks-apiserver
+  namespace: kubesphere-system
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  replicas:  1 
+  selector:
+    matchLabels:
+      app: ks-apiserver
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: ks-apiserver
+        tier: backend
+    spec:
+      serviceAccount: kubesphere
+      nodeSelector:
+        operator: ""
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: ks-apiserver
+          image: docker.io/kubesphere/ks-apiserver:v4.1.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          command:
+            - ks-apiserver
+            - --logtostderr=true
+          env:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              path: /version
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          volumeMounts:
+            - mountPath: /etc/kubesphere/
+              name: kubesphere-config
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: kubesphere-config
+          name: kubesphere-config

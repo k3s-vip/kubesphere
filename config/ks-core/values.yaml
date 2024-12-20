@@ -55,7 +55,7 @@ authentication:
     maximumClockSkew: 10s
     # Jwt Secret is required by ks-apiserver, a random string would be generated if it's empty
     # Priority: specified in values > get from kubesphere-config > default jwtSecret (a random string)
-    jwtSecret: ""
+    jwtSecret: "" # 0123456789ABCDEF0123456789abcdef
     accessTokenMaxAge: 2h
     accessTokenInactivityTimeout: 30m
 
@@ -101,7 +101,8 @@ affinity:
               values:
                 - ""
 
-nodeSelector: {}
+nodeSelector:
+  operator: ""
 
 ## enable tls communication between all components
 internalTLS: false
@@ -300,7 +301,7 @@ ingress:
   ingressClassName: ""
   # backend port number
   tls:
-    enabled: true
+    enabled: false
     # options: generation, importation, letsEncrypt
     source: generation
     secretName: kubesphere-tls-certs
@@ -324,11 +325,12 @@ nodeShell:
 # KubeSphere Cloud uses this information to help improve the product and does not share it with third-parties.
 # If you prefer not to share this data, you can keep this setting disabled.
 telemetry:
-  enabled: true
+  enabled: false
 
 extension:
   imageRegistry: ""
-  nodeSelector: {}
+  nodeSelector:
+    operator: ""
   ingress:
     ingressClassName: ""
     # The domain name suffix used to create the ingress of each extension.

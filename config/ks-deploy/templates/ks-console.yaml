@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ks-console
+    tier: frontend
+  name: ks-console
+  namespace: kubesphere-system
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  replicas:  1 
+  selector:
+    matchLabels:
+      app: ks-console
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: ks-console
+        tier: frontend
+    spec:
+      serviceAccount: kubesphere
+      nodeSelector:
+        operator: ""
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: ks-console
+          image: docker.io/kubesphere/ks-console:v4.1.2
+          imagePullPolicy: IfNotPresent
+          env:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1024Mi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 8
+          volumeMounts:
+            - name: ks-console-config
+              mountPath: /opt/kubesphere/console/configs/local_config.yaml
+              subPath: local_config.yaml
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: ks-console-config
+            items:
+              - key: local_config.yaml
+                path: local_config.yaml
+          name: ks-console-config
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ks-console
+    tier: frontend
+  annotations:
+  name: ks-console
+  namespace: kubesphere-system
+spec:
+  ports:
+  - name: nginx
+    port: 80
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: ks-console
+    tier: frontend
+  type: ClusterIP

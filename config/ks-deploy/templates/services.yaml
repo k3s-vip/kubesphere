@@ -11,28 +11,12 @@ metadata:
 spec:
   ports:
     - protocol: TCP
-    {{- if .Values.internalTLS }}
-      port: 443
-    {{- else }}
       port: 80
-    {{- end }}
       targetPort: 9090
-    {{- with .Values.apiserver.nodePort }}
-      nodePort:
-      {{- toYaml . | nindent 8 }}
-    {{- end }}
   selector:
-    {{- if eq (include "role" .) "host" }}
     app: ks-apiserver
-    {{- else }}
-    app: ks-agent
-    {{- end }}
     tier: backend
-{{- if .Values.apiserver.nodePort }}
-  type: NodePort
-{{- else}}
   type: ClusterIP
-{{- end}}
 ---
 
 apiVersion: v1
@@ -49,11 +33,7 @@ spec:
       protocol: TCP
       targetPort: 8443
   selector:
-    {{- if eq (include "role" .) "host" }}
     app: ks-controller-manager
-    {{- else }}
-    app: ks-agent
-    {{- end }}
     tier: backend
   sessionAffinity: None
   type: ClusterIP

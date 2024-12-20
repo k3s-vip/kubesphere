@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+cd "$(dirname "$(readlink -f "$0")")"
+
+# post-patch-system-ns
+kubectl create namespace kubesphere-system || true
+kubectl create namespace kubesphere-controls-system || true
+for ns in kubesphere-system kubesphere-controls-system default kube-node-lease kube-public kube-system; do
+  kubectl label ns $ns kubesphere.io/workspace=system-workspace kubesphere.io/managed=true
+done && kubectl get ns -l 'kubesphere.io/workspace,!kubesphere.io/managed' --no-headers -o custom-columns=NAME:.metadata.name |
+  xargs -I {} kubectl label ns {} kubesphere.io/managed=true
+
+grep batch/v1 -rl | grep ml$ | xargs rm
+# install
+helm -n kubesphere-system upgrade --install --create-namespace ks-core .

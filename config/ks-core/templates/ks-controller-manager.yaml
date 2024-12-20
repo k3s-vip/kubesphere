@@ -5,7 +5,6 @@ metadata:
   labels:
     app: ks-controller-manager
     tier: backend
-    version: {{ .Chart.AppVersion }}
   name: ks-controller-manager
   namespace: kubesphere-system
 spec:
@@ -26,9 +25,6 @@ spec:
       labels:
         app: ks-controller-manager
         tier: backend
-      annotations:
-        # force restart ks-controller-manager after the upgrade is complete if kubesphere-config changes
-        checksum/config: {{ include (print $.Template.BasePath "/kubesphere-config.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ template "ks-core.serviceAccountName" . }}
       {{- include "controller.imagePullSecrets" . | nindent 6 }}
@@ -88,9 +84,6 @@ spec:
               name: kubesphere-config
             - mountPath: /tmp/k8s-webhook-server/serving-certs
               name: webhook-secret
-            - mountPath: /etc/localtime
-              name: host-time
-              readOnly: true
           {{- if .Values.controller.extraVolumeMounts }}
           {{- include "common.tplvalues.render" (dict "value" .Values.controller.extraVolumeMounts "context" $) | nindent 12 }}
           {{- end }}
@@ -103,10 +96,6 @@ spec:
           secret:
             defaultMode: 420
             secretName: ks-controller-manager-webhook-cert
-        - hostPath:
-            path: /etc/localtime
-            type: ""
-          name: host-time
         {{- if .Values.controller.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" .Values.controller.extraVolumes "context" $) | nindent 8 }}
         {{- end }}
