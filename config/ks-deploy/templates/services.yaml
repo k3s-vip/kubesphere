@@ -1,0 +1,37 @@
+---
+# Source: ks-core/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ks-apiserver
+    version: v4.1.3
+  name: ks-apiserver
+  namespace: kubesphere-system
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9090
+  selector:
+    app: ks-apiserver
+  type: ClusterIP
+---
+# Source: ks-core/templates/services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ks-controller-manager
+    version: v4.1.3
+  name: ks-controller-manager
+  namespace: kubesphere-system
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app: ks-controller-manager
+  sessionAffinity: None
+  type: ClusterIP

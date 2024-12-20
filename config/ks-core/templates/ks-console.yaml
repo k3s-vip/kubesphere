@@ -3,7 +3,7 @@ apiVersion: kubesphere.io/v1alpha1
 kind: ServiceAccount
 metadata:
   name: ks-console
-  namespace: kubesphere-system
+  namespace: {{ .Release.Namespace }}
 secrets: []
 
 ---
@@ -21,7 +21,7 @@ subjects:
   - apiGroup: kubesphere.io
     kind: ServiceAccount
     name: ks-console
-    namespace: kubesphere-system
+    namespace: {{ .Release.Namespace }}
 
 ---
 apiVersion: apps/v1
@@ -31,6 +31,7 @@ metadata:
     app: ks-console
     version: {{ .Chart.AppVersion }}
   name: ks-console
+  namespace: {{ .Release.Namespace }}
 spec:
   strategy:
     rollingUpdate:
@@ -48,13 +49,8 @@ spec:
         app: ks-console
         tier: frontend
       annotations:
-        # force restart ks-console after the upgrade is complete if ks-console-config changes
-        checksum/config: {{ include (print $.Template.BasePath "/ks-console-config.yaml") . | sha256sum }}
         kubesphere.io/serviceaccount-name: ks-console
     spec:
-      {{- if .Values.global.imagePullSecrets }}
-      imagePullSecrets: {{ toYaml .Values.global.imagePullSecrets | nindent 8 }}
-      {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
       {{- end }}
@@ -134,9 +130,6 @@ spec:
             - name: ks-console-config
               mountPath: /opt/kubesphere/console/configs/local_config.yaml
               subPath: local_config.yaml
-            - name: host-time
-              mountPath: /etc/localtime
-              readOnly: true
           {{- if .Values.console.extraVolumeMounts }}
           {{- include "common.tplvalues.render" (dict "value" .Values.console.extraVolumeMounts "context" $) | nindent 12 }}
           {{- end }}
@@ -156,10 +149,6 @@ spec:
               - key: local_config.yaml
                 path: local_config.yaml
           name: ks-console-config
-        - hostPath:
-            path: /etc/localtime
-            type: ""
-          name: host-time
         {{- if .Values.console.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" .Values.console.extraVolumes "context" $) | nindent 8 }}
         {{- end }}
@@ -186,6 +175,7 @@ metadata:
     {{- end }}
     {{- end }}
   name: ks-console
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
     - name: nginx

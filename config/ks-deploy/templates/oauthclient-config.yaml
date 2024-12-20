@@ -1,4 +1,5 @@
-{{ if eq (include "multicluster.role" .) "host" }}
+---
+# Source: ks-core/templates/oauthclient-config.yaml
 apiVersion: v1
 stringData:
   configuration.yaml: |
@@ -13,8 +14,7 @@ stringData:
 kind: Secret
 metadata:
   name: oauthclient-kubesphere
-  namespace: {{ .Release.Namespace }}
+  namespace: kubesphere-system
   labels:
     config.kubesphere.io/type: oauthclient
 type: config.kubesphere.io/oauthclient
-{{ end }}

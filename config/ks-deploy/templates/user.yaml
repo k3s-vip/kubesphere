@@ -1,3 +1,5 @@
+---
+# Source: ks-core/templates/user.yaml
 apiVersion: iam.kubesphere.io/v1beta1
 kind: User
 metadata:
@@ -7,6 +9,6 @@ metadata:
     kubesphere.io/creator: "system"
 spec:
   email: admin@kubesphere.io
-  password: {{ include "getOrDefaultPass" . | quote }}
+  password: "$2a$10$zcHepmzfKPoxCVCYZr5K7ORPZZ/ySe9p/7IUb/8u./xHrnSX2LOCO"
 status:
   state: Active

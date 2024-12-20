@@ -1,12 +1,12 @@
-{{- if eq (include "multicluster.role" .) "host" }}
+---
+# Source: ks-core/templates/platformconfig-telemetry.yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: io.kubesphere.config.platformconfig.telemetry
-  namespace: {{ .Release.Namespace }}
+  namespace: kubesphere-system
 type: config.kubesphere.io/generic-platform-config
 stringData:
   configuration.yaml: |
-    enabled: {{ include "telemetry.enabled" . }}
+    enabled: false
     endpoint: "https://kubesphere.cloud"
-{{- end }}

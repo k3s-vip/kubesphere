@@ -1,12 +1,8 @@
-{{- if ne .Release.Namespace "kubesphere-system" }}
-{{- fail "This Helm release must be installed in the 'kubesphere-system' namespace." }}
-{{- end }}
-
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kubesphere-config
+  namespace: {{ .Release.Namespace }}
 data:
   kubesphere.yaml: |
     authentication:
@@ -87,7 +83,7 @@ data:
     cache:
       type: redis
       options:
-        host: redis.kubesphere-system.svc
+        host: redis.{{ .Release.Namespace }}.svc
         port: {{ if .Values.redisHA.enabled }}{{ .Values.redisHA.haproxy.servicePort | default 6379 }}{{ else }}{{ .Values.redis.port | default 6379 }}{{ end }}
         password: KUBESPHERE_CACHE_OPTIONS_PASSWORD
         db: 0

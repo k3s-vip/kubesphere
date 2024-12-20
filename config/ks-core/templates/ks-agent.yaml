@@ -6,6 +6,7 @@ metadata:
     app: ks-agent
     version: {{ .Chart.AppVersion }}
   name: ks-agent
+  namespace: {{ .Release.Namespace }}
 spec:
   strategy:
     rollingUpdate:
@@ -21,9 +22,6 @@ spec:
       tier: backend
   template:
     metadata:
-      annotations:
-        # force restart ks-agent after the upgrade is complete if kubesphere-config changes
-        checksum/config: {{ include (print $.Template.BasePath "/kubesphere-config.yaml") . | sha256sum }}
       labels:
         app: ks-agent
         tier: backend
@@ -74,9 +72,6 @@ spec:
           volumeMounts:
             - mountPath: /etc/kubesphere/
               name: kubesphere-config
-            - mountPath: /etc/localtime
-              name: host-time
-              readOnly: true
           {{- if .Values.apiserver.extraVolumeMounts }}
           {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.extraVolumeMounts "context" $) | nindent 12 }}
           {{- end }}
@@ -101,9 +96,6 @@ spec:
               name: kubesphere-config
             - mountPath: /tmp/k8s-webhook-server/serving-certs
               name: webhook-cert
-            - mountPath: /etc/localtime
-              name: host-time
-              readOnly: true
           {{- if .Values.controller.extraVolumeMounts }}
           {{- include "common.tplvalues.render" (dict "value" .Values.controller.extraVolumeMounts "context" $) | nindent 12 }}
           {{- end }}
@@ -116,10 +108,6 @@ spec:
           secret:
             defaultMode: 420
             secretName: ks-controller-manager-webhook-cert
-        - name: host-time
-          hostPath:
-            path: /etc/localtime
-            type: ""
         {{- if .Values.controller.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" .Values.controller.extraVolumes "context" $) | nindent 8 }}
         {{- end }}

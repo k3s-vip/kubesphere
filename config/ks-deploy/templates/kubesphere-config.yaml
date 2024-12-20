@@ -1,0 +1,79 @@
+---
+# Source: ks-core/templates/kubesphere-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubesphere-config
+  namespace: kubesphere-system
+data:
+  kubesphere.yaml: |
+    authentication:
+      authenticateRateLimiterMaxTries: 10
+      authenticateRateLimiterDuration: 10m0s
+      loginHistoryRetentionPeriod: 168h
+      multipleLogin: true
+      issuer:
+        url: "http://ks-console:30880"
+        jwtSecret: "0123456789ABCDEF0123456789abcdef"
+        maximumClockSkew: 10s
+        accessTokenMaxAge: 2h
+        accessTokenInactivityTimeout: 30m
+    s3:
+      endpoint: ""
+      region: us-east-1
+      disableSSL: true
+      forcePathStyle: true
+      accessKeyID: admin
+      secretAccessKey: admin
+      bucket: uploads
+    multicluster:
+      clusterRole: "host"
+      hostClusterName: "host"
+    kubeconfig:
+      # service-account-token client-certificate oidc-token webhook-token
+      authMode: client-certificate
+    terminal:
+      kubectl:
+        image: "docker.io/kubesphere/kubectl:v1.27.16"
+      node:
+        image: "docker.io/kubesphere/kubectl:v1.27.16"
+      uploadFileLimit: 100Mi
+    helmExecutor:
+      image: "docker.io/kubesphere/kubectl:v1.27.16"
+      timeout: 10m
+      historyMax: 2
+      jobTTLAfterFinished: 0s
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: ks-controller-manager
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+    extension:
+      imageRegistry: ""
+      nodeSelector:
+        operator: ""
+    experimental:
+      validationDirective: ""
+    composedApp:
+      appSelector: ""
+    kubesphere:
+      tls: false
+    auditing:
+      auditLevel: Metadata
+      enable: false
+      logOptions:
+        maxAge: 7
+        maxBackups: 10
+        maxSize: 100
+        path: /etc/audit/audit.log

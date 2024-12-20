@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 stringData:
   configuration.yaml: |
@@ -10,4 +11,5 @@ stringData:
 kind: Secret
 metadata:
   name: extensions.customresourcefilters
+  namespace: {{ .Release.Namespace }}
 type: config.kubesphere.io/custom-resource-filter

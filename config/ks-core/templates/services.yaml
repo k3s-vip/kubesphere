@@ -5,6 +5,7 @@ metadata:
     app: ks-apiserver
     version: {{ .Chart.AppVersion }}
   name: ks-apiserver
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
     - protocol: TCP
@@ -37,6 +38,7 @@ metadata:
     app: ks-controller-manager
     version: {{ .Chart.AppVersion }}
   name: ks-controller-manager
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
     - port: 443

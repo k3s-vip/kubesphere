@@ -1,0 +1,91 @@
+---
+# Source: ks-core/templates/ks-apiserver.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ks-apiserver
+    version: v4.1.3
+  name: ks-apiserver
+  namespace: kubesphere-system
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  replicas:  1 
+  selector:
+    matchLabels:
+      app: ks-apiserver
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: ks-apiserver
+        tier: backend
+    spec:
+      serviceAccountName: kubesphere
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: In
+                values:
+                - ""
+            weight: 100
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ks-apiserver
+                topologyKey: kubernetes.io/hostname
+                namespaces:
+                  - "kubesphere-system"
+      nodeSelector:
+        operator: ""
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: ks-apiserver
+          image: docker.io/kubesphere/ks-apiserver:v4.1.3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+          command:
+            - ks-apiserver
+            - --logtostderr=true
+          env:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1024Mi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          livenessProbe:
+            failureThreshold: 8
+            httpGet:
+              path: /livez
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+          volumeMounts:
+            - mountPath: /etc/kubesphere/
+              name: kubesphere-config
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: kubesphere-config
+          name: kubesphere-config

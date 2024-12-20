@@ -12,6 +12,7 @@ data:
 kind: Secret
 metadata:
   name: ks-controller-manager-webhook-cert
+  namespace: {{ .Release.Namespace }}
 type: Opaque
 
 {{ if eq (include "multicluster.role" .) "host" }}

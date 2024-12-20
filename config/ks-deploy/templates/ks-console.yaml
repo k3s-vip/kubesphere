@@ -1,0 +1,136 @@
+---
+# Source: ks-core/templates/ks-console.yaml
+apiVersion: kubesphere.io/v1alpha1
+kind: ServiceAccount
+metadata:
+  name: ks-console
+  namespace: kubesphere-system
+secrets: []
+---
+# Source: ks-core/templates/ks-console.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ks-console
+    version: v4.1.3
+  annotations:
+  name: ks-console
+  namespace: kubesphere-system
+spec:
+  ports:
+    - name: nginx
+      port: 80
+      protocol: TCP
+      targetPort: 8000
+      nodePort: 30880
+  selector:
+    app: ks-console
+  type: NodePort
+---
+# Source: ks-core/templates/ks-console.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ks-console
+    version: v4.1.3
+  name: ks-console
+  namespace: kubesphere-system
+spec:
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  replicas:  1 
+  selector:
+    matchLabels:
+      app: ks-console
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: ks-console
+        tier: frontend
+      annotations:
+        kubesphere.io/serviceaccount-name: ks-console
+    spec:
+      nodeSelector:
+        operator: ""
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: In
+                values:
+                - ""
+            weight: 100
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ks-console
+                topologyKey: kubernetes.io/hostname
+                namespaces:
+                  - "kubesphere-system"
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+        - key: CriticalAddonsOnly
+          operator: Exists
+      containers:
+        - name: ks-console
+          image: docker.io/kubesphere/ks-console:v4.1.3
+          imagePullPolicy: IfNotPresent
+          env:
+          resources:
+            limits:
+              cpu: 1
+              memory: 1024Mi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 15
+            timeoutSeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 8
+          volumeMounts:
+            - name: ks-console-config
+              mountPath: /opt/kubesphere/console/configs/local_config.yaml
+              subPath: local_config.yaml
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: ks-console-config
+            items:
+              - key: local_config.yaml
+                path: local_config.yaml
+          name: ks-console-config
+---
+# Source: ks-core/templates/ks-console.yaml
+apiVersion: iam.kubesphere.io/v1beta1
+kind: GlobalRoleBinding
+metadata:
+  labels:
+    iam.kubesphere.io/role-ref: ks-console
+  name: ks-console
+roleRef:
+  apiGroup: iam.kubesphere.io
+  kind: GlobalRole
+  name: ks-console
+subjects:
+  - apiGroup: kubesphere.io
+    kind: ServiceAccount
+    name: ks-console
+    namespace: kubesphere-system
